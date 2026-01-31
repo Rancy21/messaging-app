@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: message-app
+  output:
+    ansi:
+      enabled: ALWAYS
+logging:
+  level:
+    "[org.springframework.messaging]": trace
