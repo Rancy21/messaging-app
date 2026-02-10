@@ -6,9 +6,17 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import com.larr.message_app.security.WebSocketAuthInterceptor;
+import com.larr.message_app.security.jwt.JwtUtils;
+
+import lombok.RequiredArgsConstructor;
+
 @Configuration
+@RequiredArgsConstructor
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    private final JwtUtils jwtUtils;
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic", "/queue");
@@ -17,7 +25,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/message-app-websocket").withSockJS();
+        registry.addEndpoint("/message-app-websocket").addInterceptors(new WebSocketAuthInterceptor(jwtUtils))
+                .withSockJS();
     }
 
 }
