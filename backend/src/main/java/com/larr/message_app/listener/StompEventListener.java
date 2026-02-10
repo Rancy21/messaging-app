@@ -32,7 +32,9 @@ public class StompEventListener {
     public void listener(SessionConnectedEvent sessionConnectedEvent) {
         log.info("sessionConnectedEvent: {}", sessionConnectedEvent);
         String sessionId = sessionConnectedEvent.getMessage().getHeaders().get("simpSessionId").toString();
-        sessionMap.put(sessionId, sessionId);
+        String userId = sessionConnectedEvent.getMessage().getHeaders().get("userId").toString();
+
+        sessionMap.put(userId, sessionId);
 
     }
 
@@ -51,8 +53,10 @@ public class StompEventListener {
     @EventListener
     public void listener(SessionDisconnectEvent sessionDisconnectedEvent) {
         log.info("sessionDisconnectedEvent: {}", sessionDisconnectedEvent);
-        String sessionId = sessionDisconnectedEvent.getMessage().getHeaders().get("simpSessionId").toString();
-        sessionMap.remove(sessionId);
+        String userId = sessionDisconnectedEvent.getMessage().getHeaders().get("userId").toString();
+        if (userId != null) {
+            sessionMap.remove(userId);
+        }
 
     }
 }
