@@ -3,7 +3,9 @@ package com.larr.message_app.service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.larr.message_app.dto.LoginRequest;
 import com.larr.message_app.dto.RegisterRequest;
+import com.larr.message_app.exception.InvalidCredentialsException;
 import com.larr.message_app.exception.UserExistsException;
 import com.larr.message_app.model.User;
 import com.larr.message_app.repository.UserRepository;
@@ -26,5 +28,16 @@ public class UserService {
         User user = new User(request.getUsername(), hash);
 
         return repository.save(user);
+    }
+
+    public User loginUser(LoginRequest request) {
+        User user = repository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid Credentials"));
+
+        if (!encoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Wrong Credentials");
+        }
+
+        return user;
     }
 }
