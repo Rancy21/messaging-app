@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
-import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -21,10 +20,14 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Controller;
 
+import com.larr.message_app.dto.ChatMessageRequest;
+import com.larr.message_app.dto.MessageDTO;
 import com.larr.message_app.dto.MessageRequest;
 import com.larr.message_app.dto.MessageResponse;
 import com.larr.message_app.dto.SessionResponse;
 import com.larr.message_app.listener.StompEventListener;
+import com.larr.message_app.model.Message;
+import com.larr.message_app.service.MessageService;
 
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +43,8 @@ public class StompController {
 
     private final ConcurrentHashMap<String, ScheduledFuture<?>> sessionMap = new ConcurrentHashMap<>();
 
+    private final MessageService messageService;
+
     @MessageMapping("/hello")
     @SendTo("/topic/hello")
     public MessageResponse hello(MessageRequest request) {
@@ -51,7 +56,8 @@ public class StompController {
 
     @MessageMapping("/greeting")
     @SendTo({ "/topic/hello", "/topic/hello2" })
-    public MessageResponse greeting(MessageRequest request, Message<MessageRequest> message, MessageHeaders headers) {
+    public MessageResponse greeting(MessageRequest request,
+            org.springframework.messaging.Message<MessageRequest> message, MessageHeaders headers) {
         log.info("Message Request: {}", request.getMessage());
         log.info("Message: {}", message);
         log.info("Headers: {}", headers);
@@ -158,6 +164,22 @@ public class StompController {
             default:
                 throw new InvalidParameterException();
         }
+    }
+
+    // One-to-One Chat
+    @MessageMapping("/chat")
+    public void sendMessage(ChatMessageRequest request, MessageHeaders headers) {
+        String userId = (String) headers.get("userId");
+        if (userId != null) {
+            log.error("userId not found in websocket session");
+            return;
+        }
+        String sessionId = headers.get("simpSessionId").toString();
+
+        Message message = messageService.saveMessage(request.conversationId(), userId, request.content());
+
+        template.convertAndSend("/topic/conversation/" + request.conversationId(),
+                new MessageDTO(request.content(), message.getSender().getUsername()), createHeaders(sessionId));
     }
 
 }

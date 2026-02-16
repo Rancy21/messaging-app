@@ -1,5 +1,6 @@
 package com.larr.message_app.listener;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -53,10 +54,22 @@ public class StompEventListener {
     @EventListener
     public void listener(SessionDisconnectEvent sessionDisconnectedEvent) {
         log.info("sessionDisconnectedEvent: {}", sessionDisconnectedEvent);
-        String userId = sessionDisconnectedEvent.getMessage().getHeaders().get("userId").toString();
+        String sessionId = sessionDisconnectedEvent.getMessage().getHeaders().get("simpSessionId").toString();
+
+        String userId = getUserIdBySessionId(sessionId);
+
         if (userId != null) {
             sessionMap.remove(userId);
         }
 
+    }
+
+    public String getSessionIdByUserId(String userId) {
+        return sessionMap.get(userId);
+    }
+
+    public String getUserIdBySessionId(String sessionId) {
+        return sessionMap.entrySet().stream().filter(e -> e.getValue().equals(sessionId)).map(Map.Entry::getKey)
+                .findFirst().orElse(null);
     }
 }
