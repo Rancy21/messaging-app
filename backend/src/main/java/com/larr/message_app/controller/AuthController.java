@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.larr.message_app.dto.AuthResponse;
+import com.larr.message_app.dto.UserDTO;
 import com.larr.message_app.dto.LoginRequest;
 import com.larr.message_app.dto.RegisterRequest;
 import com.larr.message_app.model.User;
@@ -32,14 +32,14 @@ public class AuthController {
         ResponseCookie cookie = jwtUtils.generateCookie(user.getId());
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new AuthResponse(user.getId(), user.getUsername()));
+                .body(new UserDTO(user.getId(), user.getUsername()));
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         User user = service.saveUser(request);
 
-        return ResponseEntity.ok(new AuthResponse(user.getId(), user.getUsername()));
+        return ResponseEntity.ok(new UserDTO(user.getId(), user.getUsername()));
     }
 
 }
