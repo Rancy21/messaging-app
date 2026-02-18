@@ -65,7 +65,8 @@ public class SecurityConfig {
 
         auth.dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
                 // allow public endpoints access for login / register
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/**", "/index.html", "/app.js", "/main.css").permitAll()
+                .requestMatchers("/message-app-websocket/**").permitAll()
                 // allow Spring's error endpoint
                 .requestMatchers("/error").permitAll()
                 // require authenticaion for everything else

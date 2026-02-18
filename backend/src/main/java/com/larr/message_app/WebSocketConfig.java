@@ -25,7 +25,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/message-app-websocket").addInterceptors(new WebSocketAuthInterceptor(jwtUtils))
+        // Raw WebSocket endpoint (for Postman, mobile clients, etc.)
+        registry.addEndpoint("/message-app-websocket")
+                .addInterceptors(new WebSocketAuthInterceptor(jwtUtils))
+                .setAllowedOriginPatterns("*");
+
+        // SockJS endpoint (for browsers that need fallback)
+        registry.addEndpoint("/message-app-websocket")
+                .addInterceptors(new WebSocketAuthInterceptor(jwtUtils))
+                .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
 

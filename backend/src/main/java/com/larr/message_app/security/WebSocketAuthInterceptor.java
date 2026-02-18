@@ -8,10 +8,12 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
+import org.springframework.web.util.WebUtils;
 
 import com.larr.message_app.security.jwt.JwtUtils;
 import com.larr.message_app.security.jwt.JwtValidationException;
 
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,12 +31,20 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
             Map<String, Object> attributes) throws Exception {
 
+        log.info("WebSocket handshake attempt");
+        log.info("Request type: {}", request.getClass().getName());
+
+        // Add this before checking instanceof
+        if (!(request instanceof ServletServerHttpRequest)) {
+            log.warn("Request is not ServletServerHttpRequest");
+        }
+
         if (request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
 
-            String token = servletRequest.getServletRequest().getParameter("token");
-
-            if (token != null) {
+            Cookie cookie = WebUtils.getCookie(servletRequest.getServletRequest(), "auth-token");
+            if (cookie != null) {
+                String token = cookie.getValue();
                 try {
                     if (jwtUtils.validateJwtToken(token)) {
                         String userId = jwtUtils.getUserIdFromJwtToken(token);
@@ -51,6 +61,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
             }
 
             // If no token is provided reject connection
+            log.error("No jwt token provided!!");
             return false;
 
         }
