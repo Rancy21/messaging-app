@@ -13,7 +13,7 @@ import com.larr.message_app.model.Message;
 public interface MessageRepository extends JpaRepository<Message, String> {
 
     @Query("""
-            select new com.larr.message_app.dto.MessageDTO(m.content, m.sender.username)
+            select new com.larr.message_app.dto.MessageDTO(m.content, m.sender.username, m.timestamp)
             from Message m where m.conversation.id = ?1
             """)
     List<MessageDTO> findByConversation(String conversationId);
