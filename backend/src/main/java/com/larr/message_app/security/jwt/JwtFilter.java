@@ -1,7 +1,10 @@
 package com.larr.message_app.security.jwt;
 
 import java.io.IOException;
+import java.util.List;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -28,6 +31,9 @@ public class JwtFilter extends OncePerRequestFilter {
                     String userId = jwtUtils.getUserIdFromJwtToken(token);
                     request.setAttribute("userId", userId);
 
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userId, null, List.of());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (Exception e) {
                 log.error("Jwt Error: {}", e.getMessage());
