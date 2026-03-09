@@ -47,7 +47,7 @@ public class JwtUtils {
     public ResponseCookie generateCookie(String userId) {
         String token = generateToken(userId);
         return ResponseCookie.from("auth-token", token).httpOnly(true).secure(false).path("/").maxAge(expiration / 1000)
-                .build();
+                .sameSite("Lax").build();
     }
 
     public ResponseCookie generateCleanCookie() {
