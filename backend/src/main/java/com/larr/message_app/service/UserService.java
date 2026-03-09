@@ -40,4 +40,9 @@ public class UserService {
 
         return user;
     }
+
+    public User findByUsername(String username) {
+        return repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("user with name: " + username + " does not exist"));
+    }
 }
