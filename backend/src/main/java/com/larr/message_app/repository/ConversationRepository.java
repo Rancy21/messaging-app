@@ -23,7 +23,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Stri
     Optional<Conversation> findConversation(String participant1, String participant2);
 
     @Query(value = """
-            SELECT distinct on (c.id) c.id as conversation_id, u.username AS other_participant_username, m.content as last_message_content
+            SELECT distinct on (c.id) c.id as conversation_id, m.content as last_message_content, u.username AS other_participant_username
             FROM conversations c
             JOIN conversation_participants cp ON cp.conversation_id = c.id
             JOIN users u ON cp.user_id = u.id
