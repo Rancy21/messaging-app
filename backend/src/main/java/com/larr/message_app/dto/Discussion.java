@@ -1,7 +1,7 @@
 package com.larr.message_app.dto;
 
 public record Discussion(
-                String conversationID,
+                String conversationId,
                 String lastMessageContent,
-                String OtherParticipantUsername) {
+                String otherParticipantUsername) {
 }
