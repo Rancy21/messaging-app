@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -168,18 +169,20 @@ public class StompController {
 
     // One-to-One Chat
     @MessageMapping("/chat")
+    @SuppressWarnings("unchecked")
     public void sendMessage(ChatMessageRequest request, MessageHeaders headers) {
-        String userId = (String) headers.get("userId");
-        if (userId != null) {
+        Map<String, Object> sessionAttributes = (Map<String, Object>) headers.get("simpSessionAttributes");
+        String userId = sessionAttributes != null ? (String) sessionAttributes.get("userId") : null;
+        if (userId == null) {
             log.error("userId not found in websocket session");
             return;
         }
-        String sessionId = headers.get("simpSessionId").toString();
 
         Message message = messageService.saveMessage(request.conversationId(), userId, request.content());
 
-        template.convertAndSend("/topic/conversation/" + request.conversationId(),
-                new MessageDTO(request.content(), message.getSender().getUsername()), createHeaders(sessionId));
+        template.convertAndSend("/topic/conversations/" + request.conversationId(),
+                new MessageDTO(message.getId(), request.content(), message.getSender().getUsername(),
+                        message.getTimestamp()));
     }
 
 }
