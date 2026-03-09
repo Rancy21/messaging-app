@@ -3,7 +3,8 @@ package com.larr.message_app.dto;
 import java.time.LocalDateTime;
 
 public record MessageDTO(
-                String content,
-                String sender,
-                LocalDateTime time) {
+        String id,
+        String content,
+        String sender,
+        LocalDateTime time) {
 }
