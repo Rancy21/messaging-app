@@ -2,26 +2,18 @@
 
 function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center p-6">
-      <div className="max-w-xl w-full bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 p-10 text-center">
-        <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent mb-6">
-          Vite + React + Tailwind v4
-        </h1>
-        
-        <p className="text-xl text-slate-700 mb-8">
-          Modern setup • 2026 style • zero config pain
-        </p>
-
-        <div className="flex flex-wrap gap-4 justify-center">
-          <button className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5">
-            Get Started
-          </button>
-          <button className="px-8 py-4 bg-white border-2 border-slate-300 hover:border-slate-400 font-semibold rounded-xl transition-all hover:shadow-lg">
-            Learn More
-          </button>
-        </div>
-      </div>
+<div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  <div className="bg-white rounded-xl shadow-xl p-10 max-w-md w-full flex flex-col gap-5">
+    <p className="text-center text-3xl font-bold">This is a Card</p>
+    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a</p>
+    <div className="flex justify-center gap-10">
+      <button className="bg-green-600 rounded-4xl px-6 py-2 text-white hover:bg-green-800 transition cursor-pointer"> A button </button>
+      <button className="bg-blue-600 rounded-4xl px-6 py-2 text-white hover:bg-blue-800 transition cursor-pointer"> A button </button>
     </div>
+
+  </div>
+</div>
+   
   )
 }
 
