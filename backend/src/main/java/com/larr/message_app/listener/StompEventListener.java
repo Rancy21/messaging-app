@@ -78,7 +78,7 @@ public class StompEventListener {
         return Set.copyOf(onlineUsers);
     }
 
-    private String resolveUsername(String userId) {
+    public String resolveUsername(String userId) {
         return userRepository.findById(userId)
                 .map(user -> user.getUsername())
                 .orElse(userId);

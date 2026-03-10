@@ -21,6 +21,7 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Controller;
 
+import com.larr.message_app.dto.ChatEvent;
 import com.larr.message_app.dto.ChatMessageRequest;
 import com.larr.message_app.dto.MessageDTO;
 import com.larr.message_app.dto.MessageRequest;
@@ -187,6 +188,17 @@ public class StompController {
         template.convertAndSend("/topic/conversations/" + request.conversationId(),
                 new MessageDTO(message.getId(), request.content(), message.getSender().getUsername(),
                         message.getTimestamp()));
+    }
+
+    @MessageMapping("/conversations/{conversationId}/typing")
+
+    public void isTyping(@DestinationVariable("conversationId") String conversationId,
+            SimpMessageHeaderAccessor headerAccessosr) {
+        String senderId = headerAccessosr.getUser().getName();
+
+        template.convertAndSend("/topic/conversations/" + conversationId,
+                new ChatEvent(eventListener.resolveUsername(senderId), "is_typing"));
+
     }
 
 }
