@@ -1,10 +1,13 @@
 package com.larr.message_app.service;
 
+import java.util.List;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.larr.message_app.dto.LoginRequest;
 import com.larr.message_app.dto.RegisterRequest;
+import com.larr.message_app.dto.UserDTO;
 import com.larr.message_app.exception.InvalidCredentialsException;
 import com.larr.message_app.exception.UserExistsException;
 import com.larr.message_app.model.User;
@@ -44,5 +47,10 @@ public class UserService {
     public User findByUsername(String username) {
         return repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("user with name: " + username + " does not exist"));
+    }
+
+    public List<UserDTO> getUsersByUsername(String username,
+            String userId) {
+        return repository.listByUsername(username, userId);
     }
 }

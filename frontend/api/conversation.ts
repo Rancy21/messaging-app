@@ -10,7 +10,7 @@ export const conversationsApi = {
   getAll: () => apiClient.get<Discussion[]>("/api/conversations"),
 
   getOrCreate: (data: ConversationRequest) =>
-    apiClient.getWithBody<ConversationDTO>(
+    apiClient.post<ConversationDTO>(
       "/api/conversations/conversation",
       data,
     ),
