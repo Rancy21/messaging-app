@@ -1,20 +1,26 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { ChatMessageRequest, MessageDTO } from "../types";
+import type { ChatEvent, ChatMessageRequest, MessageDTO } from "../types";
 import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
 import SockJs from "sockjs-client";
 interface UseStompOptions {
   conversationId: string | null;
   onMessage: (msg: MessageDTO) => void;
+  onTyping?: (event: ChatEvent) => void;
 }
 
-export function useStomp({ conversationId, onMessage }: UseStompOptions) {
+export function useStomp({ conversationId, onMessage, onTyping }: UseStompOptions) {
   const clientRef = useRef<Client | null>(null);
   const subscriptionRef = useRef<StompSubscription | null>(null);
   const onMessageRef = useRef(onMessage);
+  const onTypingRef = useRef(onTyping);
 
   useEffect(() => {
     onMessageRef.current = onMessage;
   }, [onMessage]);
+
+  useEffect(() => {
+    onTypingRef.current = onTyping;
+  }, [onTyping]);
 
   useEffect(() => {
     const client = new Client({
@@ -27,8 +33,12 @@ export function useStomp({ conversationId, onMessage }: UseStompOptions) {
             `/topic/conversations/${conversationId}`,
             (frame: IMessage) => {
               try {
-                const msg = JSON.parse(frame.body) as MessageDTO;
-                onMessageRef.current(msg);
+                const data = JSON.parse(frame.body);
+                if (data.action === "is_typing") {
+                  onTypingRef.current?.(data as ChatEvent);
+                } else {
+                  onMessageRef.current(data as MessageDTO);
+                }
               } catch {
                 console.error("Failed to parse STOMP message", frame.body);
               }
@@ -49,6 +59,7 @@ export function useStomp({ conversationId, onMessage }: UseStompOptions) {
       client.deactivate();
     };
   }, [conversationId]);
+
   const sendMessage = useCallback((payload: ChatMessageRequest) => {
     if (clientRef.current?.connected) {
       clientRef.current.publish({
@@ -58,5 +69,13 @@ export function useStomp({ conversationId, onMessage }: UseStompOptions) {
     }
   }, []);
 
-  return { sendMessage };
+  const sendTyping = useCallback(() => {
+    if (clientRef.current?.connected && conversationId) {
+      clientRef.current.publish({
+        destination: `/app/conversations/${conversationId}/typing`,
+      });
+    }
+  }, [conversationId]);
+
+  return { sendMessage, sendTyping };
 }

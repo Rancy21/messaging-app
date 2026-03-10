@@ -4,7 +4,7 @@ import { conversationsApi } from '../../api/conversation'
 import { useStomp } from '../../hooks/useStomp'
 import { useAuth } from '../../context/AuthContext'
 import { Avatar, Spinner, ErrorMessage } from '../../components/ui/Misc'
-import type { Discussion, MessageDTO } from '../../types'
+import type { ChatEvent, Discussion, MessageDTO } from '../../types'
 
 interface MessageThreadProps {
   conversation: Discussion
@@ -17,6 +17,9 @@ export function MessageThread({ conversation, onlineUsers }: MessageThreadProps)
   const bottomRef = useRef<HTMLDivElement>(null)
   const [input, setInput] = useState('')
   const [optimisticMsgs, setOptimisticMsgs] = useState<MessageDTO[]>([])
+  const [typingUser, setTypingUser] = useState<string | null>(null)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sendTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { data: messages, isLoading, isError, error } = useQuery({
     queryKey: ['messages', conversation.conversationId],
@@ -24,30 +27,50 @@ export function MessageThread({ conversation, onlineUsers }: MessageThreadProps)
     refetchOnWindowFocus: false,
   })
 
-  // Reset optimistic messages when conversation changes
+  // Reset state when conversation changes
   useEffect(() => {
     setOptimisticMsgs([])
     setInput('')
+    setTypingUser(null)
   }, [conversation.conversationId])
 
   const handleIncomingMessage = useCallback(
     (msg: MessageDTO) => {
-      // Only append if not already in server data
       setOptimisticMsgs((prev) => {
         const alreadyExists = prev.some((m) => m.id === msg.id)
         if (alreadyExists) return prev
         return [...prev, msg]
       })
-      // Also update conversations list to refresh last message
       void qc.invalidateQueries({ queryKey: ['conversations'] })
     },
     [qc]
   )
 
-  const { sendMessage } = useStomp({
+  const handleTypingEvent = useCallback(
+    (event: ChatEvent) => {
+      if (event.senderUsername === username) return
+      setTypingUser(event.senderUsername)
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+      typingTimeoutRef.current = setTimeout(() => setTypingUser(null), 2000)
+    },
+    [username]
+  )
+
+  const { sendMessage, sendTyping } = useStomp({
     conversationId: conversation.conversationId,
     onMessage: handleIncomingMessage,
+    onTyping: handleTypingEvent,
   })
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value)
+    if (!sendTypingTimeoutRef.current) {
+      sendTyping()
+      sendTypingTimeoutRef.current = setTimeout(() => {
+        sendTypingTimeoutRef.current = null
+      }, 1000)
+    }
+  }
 
   // Scroll to bottom whenever messages update
   useEffect(() => {
@@ -71,14 +94,7 @@ export function MessageThread({ conversation, onlineUsers }: MessageThreadProps)
       content,
     })
 
-    // Optimistically add own message
-    const optimistic: MessageDTO = {
-      id: Date.now().toString(), // temporary id
-      sender: username,
-      content,
-      time: new Date().toISOString(),
-    }
-    setOptimisticMsgs((prev) => [...prev, optimistic])
+
     setInput('')
   }
 
@@ -170,6 +186,18 @@ export function MessageThread({ conversation, onlineUsers }: MessageThreadProps)
         <div ref={bottomRef} aria-hidden="true" />
       </div>
 
+      {/* Typing indicator */}
+      {typingUser && (
+        <div className="px-6 py-1.5 flex items-center gap-2 text-[11px] font-body text-ink-500 animate-fade-up">
+          <span className="flex gap-0.5">
+            <span className="w-1 h-1 rounded-full bg-ink-500 animate-bounce [animation-delay:0ms]" />
+            <span className="w-1 h-1 rounded-full bg-ink-500 animate-bounce [animation-delay:150ms]" />
+            <span className="w-1 h-1 rounded-full bg-ink-500 animate-bounce [animation-delay:300ms]" />
+          </span>
+          {typingUser} is typing
+        </div>
+      )}
+
       {/* Input bar */}
       <form
         onSubmit={handleSend}
@@ -179,7 +207,7 @@ export function MessageThread({ conversation, onlineUsers }: MessageThreadProps)
         <input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleInputChange}
           placeholder={`Message ${otherUser}…`}
           aria-label="Message input"
           className="flex-1 bg-ink-800 border border-ink-700 rounded-xl px-4 py-2.5 text-sm font-body text-ink-100 placeholder:text-ink-500 focus:outline-none focus:border-signal focus:ring-1 focus:ring-signal transition-colors"

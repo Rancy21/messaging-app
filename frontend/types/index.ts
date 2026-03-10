@@ -58,6 +58,11 @@ export interface SessionResponse {
   localDateTime: string;
 }
 
+export interface ChatEvent {
+  senderUsername: string;
+  action: string;
+}
+
 // Auth context
 export interface AuthContextValue {
   username: string | null;
