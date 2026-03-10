@@ -8,9 +8,10 @@ import type { Discussion, MessageDTO } from '../../types'
 
 interface MessageThreadProps {
   conversation: Discussion
+  onlineUsers: Set<string>
 }
 
-export function MessageThread({ conversation }: MessageThreadProps) {
+export function MessageThread({ conversation, onlineUsers }: MessageThreadProps) {
   const { username } = useAuth()
   const qc = useQueryClient()
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -89,6 +90,7 @@ export function MessageThread({ conversation }: MessageThreadProps) {
   }
 
   const otherUser = conversation.otherParticipantUsername ?? '?'
+  const isOnline = onlineUsers.has(otherUser)
 
   return (
     <div className="flex flex-col h-full">
@@ -98,8 +100,8 @@ export function MessageThread({ conversation }: MessageThreadProps) {
         <div>
           <h2 className="font-display font-semibold text-ink-50 text-sm">{otherUser}</h2>
           <p className="text-[11px] font-mono text-ink-500 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-signal inline-block animate-blink" aria-hidden="true" />
-            connected
+            <span className={`w-1.5 h-1.5 rounded-full inline-block ${isOnline ? 'bg-green-400 animate-blink' : 'bg-ink-600'}`} aria-hidden="true" />
+            {isOnline ? 'online' : 'offline'}
           </p>
         </div>
       </div>

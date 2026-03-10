@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { conversationsApi } from '../../api/conversation'
+import { userApi } from '../../api/user'
 import { useAuth } from '../../context/AuthContext'
 import { Avatar, Spinner, ErrorMessage } from '../../components/ui/Misc'
 import { Button } from '../../components/ui/Button'
@@ -10,14 +11,21 @@ import type { Discussion } from '../../types'
 interface ConversationListProps {
   selectedId: string | null
   onSelect: (conv: Discussion) => void
+  onlineUsers: Set<string>
 }
 
-export function ConversationList({ selectedId, onSelect }: ConversationListProps) {
+export function ConversationList({ selectedId, onSelect, onlineUsers }: ConversationListProps) {
   const { username, logout } = useAuth()
   const qc = useQueryClient()
   const [newRecipient, setNewRecipient] = useState('')
   const [showNew, setShowNew] = useState(false)
   const [newError, setNewError] = useState('')
+
+  const { data: searchResults, isLoading: isSearching } = useQuery({
+    queryKey: ['userSearch', newRecipient],
+    queryFn: () => userApi.searchByUsername(newRecipient),
+    enabled: showNew && newRecipient.trim().length > 0,
+  })
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['conversations'],
@@ -101,13 +109,41 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
           className="px-4 py-3 border-b border-ink-800 flex flex-col gap-2 animate-fade-up"
           aria-label="Start new conversation"
         >
-          <Input
-            placeholder="Recipient username"
-            value={newRecipient}
-            onChange={(e) => setNewRecipient(e.target.value)}
-            autoFocus
-            error={newError}
-          />
+          <div className="relative">
+            <Input
+              placeholder="Search for a user…"
+              value={newRecipient}
+              onChange={(e) => setNewRecipient(e.target.value)}
+              autoFocus
+              error={newError}
+            />
+            {newRecipient.trim() && (
+              <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-black-900 border border-ink-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                {isSearching && (
+                  <div className="flex items-center justify-center py-3">
+                    <Spinner size="sm" />
+                  </div>
+                )}
+                {!isSearching && searchResults?.length === 0 && (
+                  <p className="text-xs text-ink-500 font-body px-3 py-3 text-center">No users found</p>
+                )}
+                {searchResults?.map((user) => (
+                  <button
+                    key={user.userId}
+                    type="button"
+                    onClick={() => {
+                      setNewRecipient(user.username)
+                      createMutation.mutate(user.username)
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-ink-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal"
+                  >
+                    <Avatar username={user.username} size="sm" />
+                    <span className="text-sm font-body text-ink-100 truncate">{user.username}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <Button type="submit" loading={createMutation.isPending} fullWidth>
             Start chat
           </Button>
@@ -138,6 +174,7 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
         {data?.map((conv) => {
           const other = otherParticipant(conv)
           const isSelected = conv.conversationId === selectedId
+          const isOnline = onlineUsers.has(other)
           return (
             <button
               key={conv.conversationId}
@@ -150,7 +187,13 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
                   : 'hover:bg-ink-800 border-l-2 border-transparent'
               }`}
             >
-              <Avatar username={other} size="md" />
+              <div className="relative shrink-0">
+                <Avatar username={other} size="md" />
+                <span
+                  className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-ink-900 ${isOnline ? 'bg-green-400' : 'bg-ink-600'}`}
+                  aria-label={isOnline ? 'Online' : 'Offline'}
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-1">
                   <span

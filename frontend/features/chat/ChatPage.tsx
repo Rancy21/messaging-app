@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { ConversationList } from './ConversationList'
 import { MessageThread } from './MessageThread'
+import { usePresence } from '../../hooks/usePresence'
 import type { Discussion } from '../../types'
 
 export function ChatPage() {
   const [selected, setSelected] = useState<Discussion | null>(null)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(true)
+  const onlineUsers = usePresence()
+  console.log("online users", onlineUsers)
 
   const handleSelect = (conv: Discussion) => {
     setSelected(conv)
@@ -22,7 +25,7 @@ export function ChatPage() {
           ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
-        <ConversationList selectedId={selected?.conversationId ?? null} onSelect={handleSelect} />
+        <ConversationList selectedId={selected?.conversationId ?? null} onSelect={handleSelect} onlineUsers={onlineUsers} />
       </div>
 
       {/* Mobile overlay */}
@@ -49,7 +52,7 @@ export function ChatPage() {
               </svg>
               All conversations
             </button>
-            <MessageThread key={selected.conversationId} conversation={selected} />
+            <MessageThread key={selected.conversationId} conversation={selected} onlineUsers={onlineUsers} />
           </>
         ) : (
           <EmptyState onOpenSidebar={() => setMobileSidebarOpen(true)} />
