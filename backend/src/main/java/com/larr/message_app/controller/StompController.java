@@ -77,16 +77,18 @@ public class StompController {
     }
 
     // One - to - One Messaging
-    @MessageMapping("/sessions")
-    @SendToUser("/queue/sessions")
-    public SessionResponse sessions(MessageRequest request, MessageHeaders headers) {
-        String sessionId = headers.get("simpSessionId").toString();
+    // @MessageMapping("/sessions")
+    // @SendToUser("/queue/sessions")
+    // public SessionResponse sessions(MessageRequest request, MessageHeaders
+    // headers) {
+    // String sessionId = headers.get("simpSessionId").toString();
 
-        Set<String> sessions = eventListener.getSession();
-        log.info("sessionId: {}", sessionId);
+    // Set<String> sessions = eventListener.getSession();
+    // log.info("sessionId: {}", sessionId);
 
-        return new SessionResponse(sessions.size(), sessions.stream().toList(), sessionId, LocalDateTime.now());
-    }
+    // return new SessionResponse(sessions.size(), sessions.stream().toList(),
+    // sessionId, LocalDateTime.now());
+    // }
 
     /**
      * Forwarding Programmatically without using Annotation (@SendTo, @SendToUser)
@@ -98,18 +100,20 @@ public class StompController {
         template.convertAndSend("/topic/message1", response);
     }
 
-    @MessageMapping("/message2")
-    public void message2(MessageRequest request, MessageHeaders headers) {
-        String sessionId = headers.get("simpSessionId").toString();
+    // @MessageMapping("/message2")
+    // public void message2(MessageRequest request, MessageHeaders headers) {
+    // String sessionId = headers.get("simpSessionId").toString();
 
-        Set<String> sessions = eventListener.getSession();
-        log.info("sessionId: {}", sessionId);
+    // Set<String> sessions = eventListener.getSession();
+    // log.info("sessionId: {}", sessionId);
 
-        SessionResponse response = new SessionResponse(sessions.size(), sessions.stream().toList(), sessionId,
-                LocalDateTime.now());
+    // SessionResponse response = new SessionResponse(sessions.size(),
+    // sessions.stream().toList(), sessionId,
+    // LocalDateTime.now());
 
-        template.convertAndSendToUser(sessionId, "/queue/sessions", response, createHeaders(sessionId));
-    }
+    // template.convertAndSendToUser(sessionId, "/queue/sessions", response,
+    // createHeaders(sessionId));
+    // }
 
     private MessageHeaders createHeaders(@Nullable String sessionId) {
         SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);

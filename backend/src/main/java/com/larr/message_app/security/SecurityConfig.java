@@ -61,6 +61,8 @@ public class SecurityConfig {
     // Main securtity filter
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
+        http.cors(cors -> cors.configurationSource(configurationSource()));
+
         http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(auth ->
 
         auth.dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
@@ -74,8 +76,6 @@ public class SecurityConfig {
 
         // Add jwt filter to the filter chain
         http.addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
-
-        http.cors(cors -> cors.configurationSource(configurationSource()));
 
         return http.build();
 
